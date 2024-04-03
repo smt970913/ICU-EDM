@@ -253,7 +253,7 @@ class FQI:
         torch.save(self.target_net.state_dict(), path + 'Offline_FQI_target_network.pth')
 
 class RLConfig:
-    def __init__(self, algo_name, train_eps, gamma, lr_fqi, lr_fqe, lr_lambda, threshold):
+    def __init__(self, algo_name, train_eps, gamma, lr_fqi, lr_fqe, lr_lambda, constraint_num, threshold_list):
         self.algo = algo_name  # name of algorithm
 
         self.train_eps = train_eps  #the number of trainng episodes
@@ -281,7 +281,10 @@ class RLConfig:
         self.loss_fqe = nn.MSELoss()
 
         # safety constraint threshold
-        self.constraint_limit = threshold
+        self.constraint_num = constraint_num
+        self.constraint_limit = [0 for i in range(constraint_num)]
+        for i in range(constraint_num):
+            self.constraint_limit[i] = threshold_list[i]
 
         self.memory_capacity = int(1e6)  # capacity of Replay Memory
         self.target_update = 100 # update frequency of target net
@@ -299,12 +302,17 @@ class RLConfigurator:
         lr_lambda = float(input("Enter the learning rate for lambda: "))
         # wd_fqi = float(input("Enter the weight decay for FQI: "))
         # wd_fqe = float(input("Enter the weight decay for FQE: "))
-        threshold = float(input("Enter the safety constraint threshold: "))
+        constraint_num = int(input("Enter the number of safety constraints: "))
+        threshold_list = []
+        for i in range(constraint_num):
+            threshold = float(input(f"Enter the safety constraint threshold {i+1}: "))
+            threshold_list.append(threshold)
+        # threshold = float(input("Enter the safety constraint threshold: "))
         # memory_capacity = int(input("Enter the memory capacity: "))
         # target_update = int(input("Enter the target update frequency: "))
         # tau = float(input("Enter the soft update parameter (tau): "))
 
-        self.config = RLConfig(algo_name, train_eps, gamma, lr_fqi, lr_fqe, lr_lambda, threshold)
+        self.config = RLConfig(algo_name, train_eps, gamma, lr_fqi, lr_fqe, lr_lambda, constraint_num, threshold_list)
         return self.config
 
 
