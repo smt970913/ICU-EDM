@@ -253,7 +253,7 @@ class FQI:
         torch.save(self.target_net.state_dict(), path + 'Offline_FQI_target_network.pth')
 
 class RLConfig:
-    def __init__(self, algo_name, train_eps, gamma, lr_fqi, lr_fqe, lr_lambda, constraint_num, threshold_list):
+    def __init__(self, algo_name, train_eps, gamma, lr_fqi, lr_fqe, constraint_num, lr_lambda_list, threshold_list):
         self.algo = algo_name  # name of algorithm
 
         self.train_eps = train_eps  #the number of trainng episodes
@@ -270,7 +270,6 @@ class RLConfig:
         # learning rates
         self.lr_fqi = lr_fqi
         self.lr_fqe = lr_fqe
-        self.lr_lam = lr_lambda
 
         self.weight_decay_fqi = 1e-5
         self.weight_decay_fqe = 1e-5
@@ -283,7 +282,9 @@ class RLConfig:
         # safety constraint threshold
         self.constraint_num = constraint_num
         self.constraint_limit = [0 for i in range(constraint_num)]
+        self.lr_lam = [0 for i in range(constraint_num)]
         for i in range(constraint_num):
+            self.lr_lam[i] = lr_lambda_list[i]
             self.constraint_limit[i] = threshold_list[i]
 
         self.memory_capacity = int(1e6)  # capacity of Replay Memory
@@ -299,20 +300,23 @@ class RLConfigurator:
         gamma = float(input("Enter the discount factor (gamma): "))
         lr_fqi = float(input("Enter the learning rate for FQI: "))
         lr_fqe = float(input("Enter the learning rate for FQE: "))
-        lr_lambda = float(input("Enter the learning rate for lambda: "))
         # wd_fqi = float(input("Enter the weight decay for FQI: "))
         # wd_fqe = float(input("Enter the weight decay for FQE: "))
         constraint_num = int(input("Enter the number of safety constraints: "))
+        lr_lambda_list = []
         threshold_list = []
         for i in range(constraint_num):
+            lr_lambda = float(input(f"Enter the learning rate for lambda {i+1}: "))
             threshold = float(input(f"Enter the safety constraint threshold {i+1}: "))
+            lr_lambda_list.append(lr_lambda)
             threshold_list.append(threshold)
+
         # threshold = float(input("Enter the safety constraint threshold: "))
         # memory_capacity = int(input("Enter the memory capacity: "))
         # target_update = int(input("Enter the target update frequency: "))
         # tau = float(input("Enter the soft update parameter (tau): "))
 
-        self.config = RLConfig(algo_name, train_eps, gamma, lr_fqi, lr_fqe, lr_lambda, constraint_num, threshold_list)
+        self.config = RLConfig(algo_name, train_eps, gamma, lr_fqi, lr_fqe, constraint_num, lr_lambda_list, threshold_list)
         return self.config
 
 
