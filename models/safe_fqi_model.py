@@ -141,11 +141,15 @@ class ReplayBuffer:
         return len(self.buffer)
 
 class FQE:
-    def __init__(self, cfg, state_dim, action_dim, hidden_layers, eval_agent):
+    def __init__(self, cfg, state_dim, action_dim, hidden_layers, eval_agent, eval_target = 'obj'):
 
         self.device = cfg.device
 
-        self.gamma = cfg.gamma # discount factor
+        self.gamma = cfg.gamma ### discount factor
+        if eval_target == 'obj':
+            self.lr_fqe = cfg.lr_fqe_obj
+        else:
+            self.lr_fqe = cfg.lr_fqe_con[eval_target] ### For constraint cost, specify which constraint to evaluate
 
         # define policy Q-Estimator
         self.policy_net = FCN_fqe(state_dim, action_dim, hidden_layers).to(self.device)
@@ -155,7 +159,7 @@ class FQE:
         for target_param, param in zip(self.target_net.parameters(), self.policy_net.parameters()):
             target_param.data.copy_(param.data)
 
-        self.optimizer = cfg.optimizer_fqe(self.policy_net.parameters(), lr = cfg.lr_fqe, weight_decay = cfg.weight_decay_fqe)  # optimizer
+        self.optimizer = cfg.optimizer_fqe(self.policy_net.parameters(), lr = self.lr_fqe, weight_decay = cfg.weight_decay_fqe)  # optimizer
         self.loss = cfg.loss_fqe  # loss function
 
         # input the evaluation agent
@@ -252,25 +256,36 @@ class FQI:
         torch.save(self.policy_net.state_dict(), path + 'Offline_FQI_policy_network.pth')
         torch.save(self.target_net.state_dict(), path + 'Offline_FQI_target_network.pth')
 
-class RLConfig:
-    def __init__(self, algo_name, train_eps, gamma, lr_fqi, lr_fqe, constraint_num, lr_lambda_list, threshold_list):
+### Comparatively convenient configuration settings for studying extubation decision-making problem
+class RLConfig_default:
+    def __init__(self, algo_name, train_eps, test_eps, gamma, lr_fqi, lr_fqe_obj, constraint_num, lr_fqe_con_list, lr_lambda_list, threshold_list):
         self.algo = algo_name  # name of algorithm
 
         self.train_eps = train_eps  #the number of trainng episodes
-        self.train_eps_steps = 3000  # the number of steps in each training episode
 
-        self.test_eps = int(2e6) # the number of testing episodes
-        self.test_eps_steps = 3000  # the number of steps in each testing episode
+        self.test_eps = test_eps # the number of testing episodes
 
-        self.batch_size_cont = 200
-        self.batch_size_ext = 200
-
-        self.gamma = gamma
+        self.gamma = gamma # discount factor
 
         # learning rates
         self.lr_fqi = lr_fqi
-        self.lr_fqe = lr_fqe
+        self.lr_fqe_obj = lr_fqe_obj
 
+        # safety constraint threshold
+        self.constraint_num = constraint_num
+        self.lr_fqe_con = [0 for i in range(constraint_num)]
+        self.lr_lam = [0 for i in range(constraint_num)]
+        self.constraint_limit = [0 for i in range(constraint_num)]
+        for i in range(constraint_num):
+            self.lr_fqe_con[i] = lr_fqe_con_list[i]
+            self.lr_lam[i] = lr_lambda_list[i]
+            self.constraint_limit[i] = threshold_list[i]
+
+        ### some default settings for extubation decision-making study
+        self.train_eps_steps = 3000  # the number of steps in each training episode
+        self.test_eps_steps = 3000  # the number of steps in each testing episode
+        self.batch_size_cont = 200
+        self.batch_size_ext = 200
         self.weight_decay_fqi = 1e-5
         self.weight_decay_fqe = 1e-5
 
@@ -278,45 +293,134 @@ class RLConfig:
         self.optimizer_fqe = torch.optim.Adam
         self.loss_fqi = nn.MSELoss()
         self.loss_fqe = nn.MSELoss()
-
-        # safety constraint threshold
-        self.constraint_num = constraint_num
-        self.constraint_limit = [0 for i in range(constraint_num)]
-        self.lr_lam = [0 for i in range(constraint_num)]
-        for i in range(constraint_num):
-            self.lr_lam[i] = lr_lambda_list[i]
-            self.constraint_limit[i] = threshold_list[i]
-
         self.memory_capacity = int(1e6)  # capacity of Replay Memory
         self.target_update = 100 # update frequency of target net
         self.tau = 0.01
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # check gpu
 
+### Customized configuration settings for studying any medical decision-making problems
+class RLConfig_custom:
+    def __init__(self, algo_name, train_eps, train_eps_steps,
+                 test_eps, test_eps_steps,
+                 weight_decay_fqi, weight_decay_fqe,
+                 optim_fqi, optim_fqe,
+                 loss_fqi, loss_fqe,
+                 memory_capacity, target_update, tau,
+                 gamma,
+                 lr_fqi, lr_fqe_obj,
+                 constraint_num, lr_fqe_con_list, lr_lambda_list, threshold_list):
+
+        self.algo = algo_name  # name of algorithm
+
+        self.train_eps = train_eps  #the number of trainng episodes
+        self.train_eps_steps = train_eps_steps  # the number of steps in each training episode
+        self.test_eps = test_eps # the number of testing episodes
+        self.test_eps_steps = test_eps_steps  # the number of steps in each testing episode
+
+        self.weight_decay_fqi = weight_decay_fqi
+        self.weight_decay_fqe = weight_decay_fqe
+
+        self.optimizer_fqi = optim_fqi
+        self.optimizer_fqe = optim_fqe
+
+        self.loss_fqi = loss_fqi
+        self.loss_fqe = loss_fqe
+        self.memory_capacity = memory_capacity  # capacity of Replay Memory
+        self.target_update = target_update  # update frequency of target net
+        self.tau = tau
+
+        self.gamma = gamma # discount factor
+
+        # learning rates
+        self.lr_fqi = lr_fqi
+        self.lr_fqe_obj = lr_fqe_obj
+
+        # safety constraint threshold
+        self.constraint_num = constraint_num
+        self.lr_fqe_con = [0 for i in range(constraint_num)]
+        self.lr_lam = [0 for i in range(constraint_num)]
+        self.constraint_limit = [0 for i in range(constraint_num)]
+        for i in range(constraint_num):
+            self.lr_fqe_con[i] = lr_fqe_con_list[i]
+            self.lr_lam[i] = lr_lambda_list[i]
+            self.constraint_limit[i] = threshold_list[i]
+
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # check gpu
+
 class RLConfigurator:
     def input_rl_config(self):
-        algo_name = input("Enter the algorithm name: ")
-        train_eps = int(input("Enter the number of training episodes: "))
-        gamma = float(input("Enter the discount factor (gamma): "))
-        lr_fqi = float(input("Enter the learning rate for FQI: "))
-        lr_fqe = float(input("Enter the learning rate for FQE: "))
-        # wd_fqi = float(input("Enter the weight decay for FQI: "))
-        # wd_fqe = float(input("Enter the weight decay for FQE: "))
-        constraint_num = int(input("Enter the number of safety constraints: "))
-        lr_lambda_list = []
-        threshold_list = []
-        for i in range(constraint_num):
-            lr_lambda = float(input(f"Enter the learning rate for lambda {i+1}: "))
-            threshold = float(input(f"Enter the safety constraint threshold {i+1}: "))
-            lr_lambda_list.append(lr_lambda)
-            threshold_list.append(threshold)
+        default = input("Do you want to use the default settings? (y/n): ")
 
-        # threshold = float(input("Enter the safety constraint threshold: "))
-        # memory_capacity = int(input("Enter the memory capacity: "))
-        # target_update = int(input("Enter the target update frequency: "))
-        # tau = float(input("Enter the soft update parameter (tau): "))
+        if default == 'y':
+            algo_name = input("Enter the Algorithm Name: ")
+            train_eps = int(input("Enter the number of training episodes: "))
+            test_eps = int(input("Enter the number of testing episodes: "))
+            gamma = float(input(r"Enter the discount factor $\gamma$: "))
+            lr_fqi = float(input("Enter the learning rate of FQI agent: "))
+            lr_fqe_obj = float(input("Enter the learning rate of FQE for objective cost: "))
 
-        self.config = RLConfig(algo_name, train_eps, gamma, lr_fqi, lr_fqe, constraint_num, lr_lambda_list, threshold_list)
+            constraint_num = int(input("Enter the number of safety constraints: "))
+            lr_fqe_con_list = []
+            lr_lambda_list = []
+            threshold_list = []
+            for i in range(constraint_num):
+                lr_fqe_con = float(input(f"Enter the Learning Rate for FQE Agent of the safety constraint {i+1}: "))
+                lr_lambda = float(input(f"Enter the Learning Rate for Dual Variable $\lambda$ {i+1}: "))
+                threshold = float(input(f"Enter the Value of Safety Constraint Threshold {i+1}: "))
+                lr_fqe_con_list.append(lr_fqe_con)
+                lr_lambda_list.append(lr_lambda)
+                threshold_list.append(threshold)
+
+            self.config = RLConfig_default(algo_name, train_eps, test_eps, gamma, lr_fqi, lr_fqe_obj, constraint_num, lr_fqe_con_list, lr_lambda_list, threshold_list)
+
+        else:
+            algo_name = input("Enter the Algorithm Name: ")
+
+            train_eps = int(input("Enter the number of training episodes: "))
+            train_eps_steps = int(input("Enter the number of steps in each training episode: "))
+            test_eps = int(input("Enter the number of testing episodes: "))
+            test_eps_steps = int(input("Enter the number of steps in each testing episode: "))
+
+            weight_decay_fqi = float(input("Enter the weight decay for FQI agent: "))
+            weight_decay_fqe = float(input("Enter the weight decay for all FQE agents: "))
+
+            optim_fqi = input("Enter the optimizer for FQI agent (e.g. torch.optim.Adam): ")
+            optim_fqe = input("Enter the optimizer for FQE agents (e.g. torch.optim.Adam): ")
+
+            loss_fqi = input("Enter the loss function for FQI agent (e.g. nn.MSELoss()): ")
+            loss_fqe = input("Enter the loss function for FQE agents (e.g. nn.MSELoss()): ")
+
+            memory_capacity = int(input("Enter the memory capacity: "))
+            target_update = int(input("Enter the target update frequency: "))
+            tau = float(input("Enter the soft update parameter (tau): "))
+            gamma = float(input(r"Enter the discount factor $\gamma$: "))
+
+            lr_fqi = float(input("Enter the learning rate of FQI agent: "))
+            lr_fqe_obj = float(input("Enter the learning rate of FQE for objective cost: "))
+
+            constraint_num = int(input("Enter the number of safety constraints: "))
+            lr_fqe_con_list = []
+            lr_lambda_list = []
+            threshold_list = []
+            for i in range(constraint_num):
+                lr_fqe_con = float(input(f"Enter the Learning Rate for FQE Agent of the safety constraint {i+1}: "))
+                lr_lambda = float(input(f"Enter the Learning Rate for Dual Variable $\lambda$ {i+1}: "))
+                threshold = float(input(f"Enter the Value of Safety Constraint Threshold {i+1}: "))
+                lr_fqe_con_list.append(lr_fqe_con)
+                lr_lambda_list.append(lr_lambda)
+                threshold_list.append(threshold)
+
+            self.config = RLConfig_custom(algo_name, train_eps, train_eps_steps,
+                                          test_eps, test_eps_steps,
+                                          weight_decay_fqi, weight_decay_fqe,
+                                          optim_fqi, optim_fqe,
+                                          loss_fqi, loss_fqe,
+                                          memory_capacity, target_update, tau,
+                                          gamma,
+                                          lr_fqi, lr_fqe_obj,
+                                          constraint_num, lr_fqe_con_list, lr_lambda_list, threshold_list)
+
         return self.config
 
 

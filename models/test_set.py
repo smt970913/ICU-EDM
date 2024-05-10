@@ -21,13 +21,13 @@ class RLTesting:
         self.test_agent = test_agent
         self.data_loader = data_loader
 
-    def fqe_agent_config(self, seed = 100):
-        agent_fqe_test = safe_fqi_model.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, self.test_agent)
+    def fqe_agent_config(self, eval_target, seed = 100):
+        agent_fqe_test = safe_fqi_model.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, self.test_agent, eval_target)
         torch.manual_seed(seed)
         return agent_fqe_test
 
     def test(self, agent_fqe_obj, agent_fqe_con_list):
-        print('Start to test !')
+        print('Start to test RL agent!')
         print(f'Algorithm:{self.cfg.algo}, Device:{self.cfg.device}')
 
         self.loss_eva_obj = []
@@ -72,20 +72,20 @@ class RLTesting:
                         target_param.data.copy_(self.cfg.tau * policy_param.data + (1 - self.cfg.tau) * target_param.data)
 
             if k % 1000 == 0:
-                print(f'Episode:{k}, Loss:{loss_ev_obj}, FQE_est_value_obj:{fqe_obj_est_value}')
+                # print(f'Episode:{k}, Loss:{np.mean(self.loss_eva_obj)}, FQE_est_value_obj:{np.mean(self.FQE_est_value_obj)}')
                 self.loss_eva_mv_obj.append(np.mean(self.loss_eva_obj))
                 self.FQE_est_value_mv_obj.append(np.mean(self.FQE_est_value_obj))
                 self.FQE_est_ci_lb_mv_obj.append(np.percentile(self.FQE_est_value_obj, 2.5))
                 self.FQE_est_ci_ub_mv_obj.append(np.percentile(self.FQE_est_value_obj, 97.5))
 
                 for m in range(len(agent_fqe_con_list)):
-                    print(f'Episode:{k}, Loss:{self.loss_eva_con[m]}, FQE_est_value_con:{self.FQE_est_value_con[m]}')
+                    # print(f'Episode:{k}, Loss:{np.mean(self.loss_eva_con[m])}, FQE_est_value_con:{np.mean(self.FQE_est_value_con[m])}')
                     self.loss_eva_mv_con[m].append(np.mean(self.loss_eva_con[m]))
                     self.FQE_est_value_mv_con[m].append(np.mean(self.FQE_est_value_con[m]))
                     self.FQE_est_ci_lb_mv_con[m].append(np.percentile(self.FQE_est_value_con[m], 2.5))
                     self.FQE_est_ci_ub_mv_con[m].append(np.percentile(self.FQE_est_value_con[m], 97.5))
 
-        print("Complete testing")
+        print("Complete RL Testing")
 
         return self.loss_eva_obj, self.FQE_est_value_obj, self.loss_eva_mv_obj, self.FQE_est_value_mv_obj, self.FQE_est_ci_lb_mv_obj, self.FQE_est_ci_ub_mv_obj, self.loss_eva_con, self.FQE_est_value_con, self.loss_eva_mv_con, self.FQE_est_value_mv_con, self.FQE_est_ci_lb_mv_con, self.FQE_est_ci_ub_mv_con
 
