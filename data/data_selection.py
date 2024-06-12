@@ -322,3 +322,106 @@ class DataSelect:
             'd_items_data_3': self.d_items_data_3,
             'd_items_data_4': self.d_items_data_4
         }
+
+class DataMarker:
+    def __init__(self, comb_data_1_path, admissions_path, patients_path, chart_events_data_1):
+        self.comb_data_1 = pd.read_csv(comb_data_1_path, compression='gzip')
+        self.admission_data = pd.read_csv(admissions_path, compression='gzip')
+        self.patients_data = pd.read_csv(patients_path, compression='gzip')
+        self.chart_events_data_1 = chart_events_data_1
+        self.comb_data_2 = None
+        self.comb_data_3 = None
+        self.comb_data_4 = None
+        self.comb_data_5 = None
+        self.comb_data_6 = None
+        self.comb_data_6_sl = None
+        self.data_TimeInt_chart_df = None
+
+    def preprocess_data(self):
+        self.patients_data = self.patients_data.drop(columns=['anchor_year', 'anchor_year_group'])
+        self.admission_data = self.admission_data[['subject_id', 'race']]
+
+        self.comb_data_2 = self.comb_data_1[self.comb_data_1['itemid'] == 225792]
+        self.comb_data_3 = self.comb_data_2.copy()
+        self.comb_data_3['ext_time'] = 1
+
+        for i in range(1, len(self.comb_data_3)):
+            if self.comb_data_3['stay_id'].iloc[i] == self.comb_data_3['stay_id'].iloc[i - 1]:
+                self.comb_data_3['ext_time'].iloc[i] = self.comb_data_3['ext_time'].iloc[i - 1] + 1
+
+        self.comb_data_4 = pd.merge(self.patients_data, self.comb_data_3, how="right", on="subject_id")
+
+        admission_data_1 = self.admission_data[self.admission_data['subject_id'].isin(self.comb_data_4['subject_id'])]
+        admission_data_1 = admission_data_1.drop_duplicates(subset=['subject_id'], keep='first')
+
+        self.comb_data_5 = pd.merge(admission_data_1, self.comb_data_4, how="right", on="subject_id")
+
+        self.comb_data_6 = self.comb_data_5.copy()
+        names_select_cb = ['stay_id', 'race', 'gender', 'anchor_age', 'intime', 'outtime', 'dod', 'los',
+                           'patientweight', 'mv_id', 'ext_fail', 'ext_time']
+        self.comb_data_6_sl = self.comb_data_6[names_select_cb]
+        self.comb_data_6_sl = self.comb_data_6_sl.drop_duplicates(subset=['stay_id'], keep='first')
+
+        self.chart_events_data_1 = self.chart_events_data_1[self.chart_events_data_1['stay_id'].isin(self.comb_data_6['stay_id'])]
+        self.comb_data_6 = self.comb_data_6[self.comb_data_6['stay_id'].isin(self.chart_events_data_1['stay_id'])]
+
+    def build_time_intervals(self):
+        self.chart_events_data_1['charttime'] = pd.to_datetime(self.chart_events_data_1['charttime'])
+        self.chart_events_data_1 = self.chart_events_data_1.sort_values(by=['subject_id', "stay_id", 'itemid', "charttime"])
+
+        data_TimeInt_chart = {'stay_id': [], 'start': [], 'end': [], 'dod': []}
+        ad_list_chart = pd.unique(self.chart_events_data_1["stay_id"])
+
+        for stay_id in ad_list_chart:
+            sub_table = self.comb_data_6[self.comb_data_6['stay_id'] == stay_id]
+            if len(sub_table) == 1:
+                data_TimeInt_chart['stay_id'].append(stay_id)
+                data_TimeInt_chart['start'].append(sub_table['starttime'].iloc[0])
+                data_TimeInt_chart['end'].append(sub_table['endtime'].iloc[0])
+                data_TimeInt_chart['dod'].append(sub_table['dod'].iloc[0])
+            else:
+                for j in range(len(sub_table)):
+                    data_TimeInt_chart['stay_id'].append(sub_table['stay_id'].iloc[j])
+                    data_TimeInt_chart['start'].append(sub_table['starttime'].iloc[j])
+                    data_TimeInt_chart['end'].append(sub_table['endtime'].iloc[j])
+                    data_TimeInt_chart['dod'].append(sub_table['dod'].iloc[j])
+
+        self.data_TimeInt_chart_df = pd.DataFrame.from_dict(data_TimeInt_chart)
+
+    def mark_deaths(self):
+        data_TimeInt_chart_dod = self.comb_data_6[['stay_id', 'starttime', 'endtime', 'dod', 'outtime', 'mv_id', 'ext_fail', 'ext_time']]
+        data_TimeInt_chart_dod.rename(columns={'starttime': 'start', 'endtime': 'end'}, inplace=True)
+        data_TimeInt_chart_dod['dod'] = pd.to_datetime(data_TimeInt_chart_dod['dod'])
+        data_TimeInt_chart_dod['TV_death_ext'] = data_TimeInt_chart_dod['dod'] - data_TimeInt_chart_dod['end']
+
+        death_list_1 = list(data_TimeInt_chart_dod[data_TimeInt_chart_dod['TV_death_ext'] <= pd.Timedelta('0 days 00:00:00')]['stay_id'])
+        death_list_2 = list(data_TimeInt_chart_dod[(data_TimeInt_chart_dod['TV_death_ext'] <= pd.Timedelta('30 days 00:00:00')) &
+                                                   (data_TimeInt_chart_dod['TV_death_ext'] > pd.Timedelta('0 days 00:00:00'))]['stay_id'])
+
+        data_TimeInt_chart_dod['ext_death_bf'] = 0
+        data_TimeInt_chart_dod['ext_death_afe'] = 0
+
+        for i in range(len(data_TimeInt_chart_dod)):
+            if data_TimeInt_chart_dod['TV_death_ext'].iloc[i] <= pd.Timedelta('0 days 00:00:00'):
+                data_TimeInt_chart_dod.at[i, 'ext_death_bf'] = 1
+            elif (data_TimeInt_chart_dod['TV_death_ext'].iloc[i] <= pd.Timedelta('30 days 00:00:00')) and \
+                    (data_TimeInt_chart_dod['TV_death_ext'].iloc[i] > pd.Timedelta('0 days 00:00:00')):
+                data_TimeInt_chart_dod.at[i, 'ext_death_afe'] = 1
+
+        self.data_TimeInt_chart_df = data_TimeInt_chart_dod.drop(['dod', 'TV_death_ext'], axis='columns').copy()
+
+    def process_all(self):
+        self.preprocess_data()
+        self.build_time_intervals()
+        self.mark_deaths()
+
+    def get_processed_data(self):
+        return {
+            'comb_data_2': self.comb_data_2,
+            'comb_data_3': self.comb_data_3,
+            'comb_data_4': self.comb_data_4,
+            'comb_data_5': self.comb_data_5,
+            'comb_data_6': self.comb_data_6,
+            'comb_data_6_sl': self.comb_data_6_sl,
+            'data_TimeInt_chart_df': self.data_TimeInt_chart_df
+        }
