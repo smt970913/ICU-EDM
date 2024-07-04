@@ -5,7 +5,7 @@ import sys
 script_dir = os.path.dirname(__file__)
 sys.path.append(script_dir)
 
-from safe_fqi_model import RLConfig
+from offline_fqi_model import RLConfig
 import train_set
 
 import DataMIMIC_IV_EFR

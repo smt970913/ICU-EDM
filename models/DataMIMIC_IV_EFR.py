@@ -11,13 +11,13 @@ from sklearn.preprocessing import StandardScaler
 
 script_dir = os.path.dirname(__file__)
 sys.path.append(script_dir)
-import safe_fqi_model
+import offline_fqi_model
 
 import warnings
 warnings.filterwarnings('ignore')
 
 class DataLoader:
-    def __init__(self, cfg, state_id_path, rl_state_path, test_size = 0.20, random_state = 1000, scaler = StandardScaler()):
+    def __init__(self, cfg, state_id_path, rl_state_path, test_size = 0.20, random_state = 1024, scaler = StandardScaler()):
         self.cfg = cfg
         self.state_id_path = state_id_path
         self.rl_state_path = rl_state_path
@@ -30,7 +30,7 @@ class DataLoader:
         self.rl_state_var = pd.read_csv(self.rl_state_path)
 
         # Initial processing
-        self.process_con_costs()
+        self.process_costs()
         self.rl_state_var = self.drop_unwanted_columns(self.rl_state_var)
         self.rl_state_var_sc = self.scale_data(self.rl_state_var)
 
@@ -38,16 +38,19 @@ class DataLoader:
         self.state_df_id_exp = self.state_df_id.copy()
         self.split_data()
 
-    def process_con_costs(self):
+    def process_costs(self):
+
+        self.state_df_id['con_costs'] = self.state_df_id['obj_costs'].copy()
+
         # Initialize 'con_costs' to 0 by default
-        self.state_df_id['con_costs'] = 0
+        self.state_df_id['obj_costs'] = 0
 
         # Processing conditions
         condition_1 = (self.state_df_id['EXT'] == 1) & (self.state_df_id['ext_fail'] == 1)
-        self.state_df_id.loc[condition_1, 'con_costs'] = 100
+        self.state_df_id.loc[condition_1, 'obj_costs'] = 100
 
         condition_2 = (self.state_df_id['EXT'] == 1) & (self.state_df_id['ext_fail'] != 1)
-        self.state_df_id.loc[condition_2, 'con_costs'] = 0
+        self.state_df_id.loc[condition_2, 'obj_costs'] = 0
 
     def drop_unwanted_columns(self, df):
         columns_to_drop = ['Respiratory Rate', 'Respiratory Rate (spontaneous)', 'Respiratory Rate (Total)',

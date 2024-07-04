@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 script_dir = os.path.dirname(__file__)
 sys.path.append(script_dir)
-import safe_fqi_model
+import offline_fqi_model
 
 import warnings
 warnings.filterwarnings('ignore')
