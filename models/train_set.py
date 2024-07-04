@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 script_dir = os.path.dirname(__file__)
 sys.path.append(script_dir)
+
 import offline_fqi_model
 
 import warnings
@@ -22,17 +23,17 @@ class RLTraining:
         self.data_loader = data_loader
 
     def fqi_agent_config(self, seed = 1):
-        agent_fqi = safe_fqi_model.FQI(self.cfg, self.state_dim, self.action_dim, self.hidden_layers)
+        agent_fqi = offline_fqi_model.FQI(self.cfg, self.state_dim, self.action_dim, self.hidden_layers)
         torch.manual_seed(seed)
         return agent_fqi
 
     def fqe_agent_config(self, eval_agent, eval_target, seed = 2):
-        agent_fqe = safe_fqi_model.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, eval_agent, eval_target)
+        agent_fqe = offline_fqi_model.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, eval_agent, eval_target)
         torch.manual_seed(seed)
         return agent_fqe
 
     def train(self, agent_fqi, agent_fqe_obj, agent_fqe_con_list, safe_constraint = None):
-        print('Start to train RL and FQE agents!')
+        print('Start to train!')
         print(f'Algorithm:{self.cfg.algo}, Device:{self.cfg.device}')
 
         self.FQI_loss = []
@@ -112,9 +113,9 @@ class RLTraining:
             print(f"Average FQE estimated objective cost after epoch {k + 1}: {np.mean(fqe_est_obj)}")
 
             for m in range(len(agent_fqe_con_list)):
-                print(f"Average FQE estimated constraint cost of safety constraint {m} after epoch {k + 1}: {np.mean(fqe_est_con[m])}")
-                print(f"Dual variable of safety constraint {m} after epoch {k + 1}: {lambda_t_list[m]}")
-                print(f"Dual variable update of safety constraint {m} after epoch {k + 1}: {lambda_update_list[m]}")
+                print(f"Average FQE estimated constraint cost of constraint {m} after epoch {k + 1}: {np.mean(fqe_est_con[m])}")
+                print(f"Dual variable of constraint {m} after epoch {k + 1}: {lambda_t_list[m]}")
+                print(f"Dual variable update of constraint {m} after epoch {k + 1}: {lambda_update_list[m]}")
 
                 self.lambda_dict[m].append(lambda_t_list[m])
                 self.FQE_loss_con[m].append(np.mean(loss_list_fqe_con[m]))
@@ -126,6 +127,6 @@ class RLTraining:
             self.FQI_est_values.append(np.mean(fqi_est_list))
             self.FQE_est_obj_costs.append(np.mean(fqe_est_obj))
 
-        print("Complete RL Training")
+        print("Complete Training!")
 
         return self.FQI_loss, self.FQE_loss_obj, self.FQE_loss_con, self.FQI_est_values, self.FQE_est_obj_costs, self.FQE_est_con_costs, self.lambda_dict

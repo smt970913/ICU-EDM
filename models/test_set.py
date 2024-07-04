@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 script_dir = os.path.dirname(__file__)
 sys.path.append(script_dir)
+
 import offline_fqi_model
 
 import warnings
@@ -22,12 +23,12 @@ class RLTesting:
         self.data_loader = data_loader
 
     def fqe_agent_config(self, eval_target, seed = 100):
-        agent_fqe_test = safe_fqi_model.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, self.test_agent, eval_target)
+        agent_fqe_test = offline_fqi_model.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, self.test_agent, eval_target)
         torch.manual_seed(seed)
         return agent_fqe_test
 
     def test(self, agent_fqe_obj, agent_fqe_con_list):
-        print('Start to test RL agent!')
+        print('Start to test!')
         print(f'Algorithm:{self.cfg.algo}, Device:{self.cfg.device}')
 
         self.loss_eva_obj = []
@@ -85,7 +86,7 @@ class RLTesting:
                     self.FQE_est_ci_lb_mv_con[m].append(np.percentile(self.FQE_est_value_con[m], 2.5))
                     self.FQE_est_ci_ub_mv_con[m].append(np.percentile(self.FQE_est_value_con[m], 97.5))
 
-        print("Complete RL Testing")
+        print("Complete Testing!")
 
         return self.loss_eva_obj, self.FQE_est_value_obj, self.loss_eva_mv_obj, self.FQE_est_value_mv_obj, self.FQE_est_ci_lb_mv_obj, self.FQE_est_ci_ub_mv_obj, self.loss_eva_con, self.FQE_est_value_con, self.loss_eva_mv_con, self.FQE_est_value_mv_con, self.FQE_est_ci_lb_mv_con, self.FQE_est_ci_ub_mv_con
 

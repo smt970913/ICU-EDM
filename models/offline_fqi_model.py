@@ -284,8 +284,8 @@ class RLConfig_default:
         ### some default settings for extubation decision-making study
         self.train_eps_steps = 3000  # the number of steps in each training episode
         self.test_eps_steps = 3000  # the number of steps in each testing episode
-        self.batch_size_cont = 200
-        self.batch_size_ext = 200
+        self.batch_size_cont = 400
+        self.batch_size_ext = 400
         self.weight_decay_fqi = 1e-5
         self.weight_decay_fqe = 1e-5
 
@@ -341,6 +341,7 @@ class RLConfig_custom:
         self.lr_fqe_con = [0 for i in range(constraint_num)]
         self.lr_lam = [0 for i in range(constraint_num)]
         self.constraint_limit = [0 for i in range(constraint_num)]
+
         for i in range(constraint_num):
             self.lr_fqe_con[i] = lr_fqe_con_list[i]
             self.lr_lam[i] = lr_lambda_list[i]
@@ -360,14 +361,14 @@ class RLConfigurator:
             lr_fqi = float(input("Enter the learning rate of FQI agent: "))
             lr_fqe_obj = float(input("Enter the learning rate of FQE for objective cost: "))
 
-            constraint_num = int(input("Enter the number of safety constraints: "))
+            constraint_num = int(input("Enter the number of constraints: "))
             lr_fqe_con_list = []
             lr_lambda_list = []
             threshold_list = []
             for i in range(constraint_num):
-                lr_fqe_con = float(input(f"Enter the Learning Rate for FQE Agent of the safety constraint {i+1}: "))
-                lr_lambda = float(input(f"Enter the Learning Rate for Dual Variable $\lambda$ {i+1}: "))
-                threshold = float(input(f"Enter the Value of Safety Constraint Threshold {i+1}: "))
+                lr_fqe_con = float(input(f"Enter the learning rate for FQE Agent of the constraint {i+1}: "))
+                lr_lambda = float(input(f"Enter the learning rate for dual variable $\lambda$ {i+1}: "))
+                threshold = float(input(f"Enter the value of constraint threshold {i+1}: "))
                 lr_fqe_con_list.append(lr_fqe_con)
                 lr_lambda_list.append(lr_lambda)
                 threshold_list.append(threshold)
@@ -382,11 +383,11 @@ class RLConfigurator:
             test_eps = int(input("Enter the number of testing episodes: "))
             test_eps_steps = int(input("Enter the number of steps in each testing episode: "))
 
-            weight_decay_fqi = float(input("Enter the weight decay for FQI agent: "))
-            weight_decay_fqe = float(input("Enter the weight decay for all FQE agents: "))
-
             optim_fqi = input("Enter the optimizer for FQI agent (e.g. torch.optim.Adam): ")
             optim_fqe = input("Enter the optimizer for FQE agents (e.g. torch.optim.Adam): ")
+
+            weight_decay_fqi = float(input("Enter the weight decay for FQI agent: "))
+            weight_decay_fqe = float(input("Enter the weight decay for all FQE agents: "))
 
             loss_fqi = input("Enter the loss function for FQI agent (e.g. nn.MSELoss()): ")
             loss_fqe = input("Enter the loss function for FQE agents (e.g. nn.MSELoss()): ")
@@ -399,14 +400,14 @@ class RLConfigurator:
             lr_fqi = float(input("Enter the learning rate of FQI agent: "))
             lr_fqe_obj = float(input("Enter the learning rate of FQE for objective cost: "))
 
-            constraint_num = int(input("Enter the number of safety constraints: "))
+            constraint_num = int(input("Enter the number of constraints: "))
             lr_fqe_con_list = []
             lr_lambda_list = []
             threshold_list = []
             for i in range(constraint_num):
-                lr_fqe_con = float(input(f"Enter the Learning Rate for FQE Agent of the safety constraint {i+1}: "))
-                lr_lambda = float(input(f"Enter the Learning Rate for Dual Variable $\lambda$ {i+1}: "))
-                threshold = float(input(f"Enter the Value of Safety Constraint Threshold {i+1}: "))
+                lr_fqe_con = float(input(f"Enter the learning rate for FQE Agent of the constraint {i+1}: "))
+                lr_lambda = float(input(f"Enter the learning rate for dual variable $\lambda$ {i+1}: "))
+                threshold = float(input(f"Enter the value of constraint threshold {i+1}: "))
                 lr_fqe_con_list.append(lr_fqe_con)
                 lr_lambda_list.append(lr_lambda)
                 threshold_list.append(threshold)

@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler
 
 script_dir = os.path.dirname(__file__)
 sys.path.append(script_dir)
+
 import offline_fqi_model
 
 import warnings
@@ -58,7 +59,15 @@ class DataLoader:
         return df.drop(columns=columns_to_drop)
 
     def scale_data(self, df):
-        return pd.DataFrame(self.scaler.fit_transform(df), columns = df.columns)
+        df_1 = df.copy()
+        feature_list = list(df.columns)
+
+        df_1[feature_list] = self.scaler.fit_transform(df[feature_list])
+
+        df_1['M'] = df['M'].copy()
+        df_1['M'] =  df_1['M'].astype(float)
+
+        return df_1
 
     def split_data(self):
         self.train_ext_id, self.test_ext_id = train_test_split(pd.unique(self.state_df_id_exp['ext_id']), test_size = self.test_size, random_state = self.random_state)
@@ -67,23 +76,23 @@ class DataLoader:
         self.data_buffer_test()
 
     def prepare_dataframes(self):
-        self.state_df_id_cont = self.state_df_id_exp[self.state_df_id_exp['EXT'] == 0]
-        self.state_df_id_ext = self.state_df_id_exp[self.state_df_id_exp['EXT'] == 1]
+        self.state_df_id_cont = self.state_df_id_exp[self.state_df_id_exp['EXT'] == 0].copy()
+        self.state_df_id_ext = self.state_df_id_exp[self.state_df_id_exp['EXT'] == 1].copy()
 
-        self.train_state_table = self.state_df_id_exp[self.state_df_id_exp['ext_id'].isin(self.train_ext_id.tolist())]
-        self.test_state_table = self.state_df_id_exp[self.state_df_id_exp['ext_id'].isin(self.test_ext_id.tolist())]
+        self.train_state_table = self.state_df_id_exp[self.state_df_id_exp['ext_id'].isin(self.train_ext_id.tolist())].copy()
+        self.test_state_table = self.state_df_id_exp[self.state_df_id_exp['ext_id'].isin(self.test_ext_id.tolist())].copy()
         self.train_index_list = self.train_state_table.index.tolist()
         self.test_index_list = self.test_state_table.index.tolist()
-        self.rl_state_var_sc_train = self.rl_state_var_sc.loc[self.train_index_list]
-        self.rl_state_var_sc_test = self.rl_state_var_sc.loc[self.test_index_list]
-        self.rl_state_var_train = self.rl_state_var.loc[self.train_index_list]
-        self.rl_state_var_test = self.rl_state_var.loc[self.test_index_list]
+        self.rl_state_var_sc_train = self.rl_state_var_sc.loc[self.train_index_list].copy()
+        self.rl_state_var_sc_test = self.rl_state_var_sc.loc[self.test_index_list].copy()
+        self.rl_state_var_train = self.rl_state_var.loc[self.train_index_list].copy()
+        self.rl_state_var_test = self.rl_state_var.loc[self.test_index_list].copy()
 
-        self.train_state_table_cont = self.state_df_id_cont[self.state_df_id_cont['ext_id'].isin(self.train_ext_id.tolist())]
-        self.test_state_table_cont = self.state_df_id_cont[self.state_df_id_cont['ext_id'].isin(self.test_ext_id.tolist())]
+        self.train_state_table_cont = self.state_df_id_cont[self.state_df_id_cont['ext_id'].isin(self.train_ext_id.tolist())].copy()
+        self.test_state_table_cont = self.state_df_id_cont[self.state_df_id_cont['ext_id'].isin(self.test_ext_id.tolist())].copy()
 
-        self.train_state_table_ext = self.state_df_id_ext[self.state_df_id_ext['ext_id'].isin(self.train_ext_id.tolist())]
-        self.test_state_table_ext = self.state_df_id_ext[self.state_df_id_ext['ext_id'].isin(self.test_ext_id.tolist())]
+        self.train_state_table_ext = self.state_df_id_ext[self.state_df_id_ext['ext_id'].isin(self.train_ext_id.tolist())].copy()
+        self.test_state_table_ext = self.state_df_id_ext[self.state_df_id_ext['ext_id'].isin(self.test_ext_id.tolist())].copy()
 
         self.train_index_list_cont = self.train_state_table_cont.index.tolist()
         self.train_index_list_ext = self.train_state_table_ext.index.tolist()
@@ -91,23 +100,23 @@ class DataLoader:
         self.test_index_list_cont = self.test_state_table_cont.index.tolist()
         self.test_index_list_ext = self.test_state_table_ext.index.tolist()
 
-        self.rl_state_var_sc_train_cont = self.rl_state_var_sc.loc[self.train_index_list_cont]
-        self.rl_state_var_sc_test_cont = self.rl_state_var_sc.loc[self.test_index_list_cont]
+        self.rl_state_var_sc_train_cont = self.rl_state_var_sc.loc[self.train_index_list_cont].copy()
+        self.rl_state_var_sc_test_cont = self.rl_state_var_sc.loc[self.test_index_list_cont].copy()
 
-        self.rl_state_var_sc_train_ext = self.rl_state_var_sc.loc[self.train_index_list_ext]
-        self.rl_state_var_sc_test_ext = self.rl_state_var_sc.loc[self.test_index_list_ext]
+        self.rl_state_var_sc_train_ext = self.rl_state_var_sc.loc[self.train_index_list_ext].copy()
+        self.rl_state_var_sc_test_ext = self.rl_state_var_sc.loc[self.test_index_list_ext].copy()
 
-        self.rl_state_var_train_cont = self.rl_state_var.loc[self.train_index_list_cont]
-        self.rl_state_var_test_cont = self.rl_state_var.loc[self.test_index_list_cont]
+        self.rl_state_var_train_cont = self.rl_state_var.loc[self.train_index_list_cont].copy()
+        self.rl_state_var_test_cont = self.rl_state_var.loc[self.test_index_list_cont].copy()
 
-        self.rl_state_var_train_ext = self.rl_state_var.loc[self.train_index_list_ext]
-        self.rl_state_var_test_ext = self.rl_state_var.loc[self.test_index_list_ext]
+        self.rl_state_var_train_ext = self.rl_state_var.loc[self.train_index_list_ext].copy()
+        self.rl_state_var_test_ext = self.rl_state_var.loc[self.test_index_list_ext].copy()
 
         self.terminal_state = np.zeros(self.rl_state_var_sc.shape[1])
 
     def data_buffer_train(self):
-        self.train_memory_cont = safe_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
-        self.train_memory_ext = safe_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
+        self.train_memory_cont = offline_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
+        self.train_memory_ext = offline_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
 
         for i in range(len(self.train_state_table_cont)):
             state = self.rl_state_var_sc_train_cont.values[i]
@@ -133,8 +142,8 @@ class DataLoader:
             self.train_memory_ext.push(state, action, obj_cost, con_cost, next_state, done)
 
     def data_buffer_test(self):
-        self.test_memory_cont = safe_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
-        self.test_memory_ext = safe_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
+        self.test_memory_cont = offline_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
+        self.test_memory_ext = offline_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
 
         for i in range(len(self.test_state_table_cont)):
             state = self.rl_state_var_sc_test_cont.values[i]
