@@ -355,8 +355,8 @@ class RLConfigurator:
 
         if default == 'y':
             algo_name = input("Enter the Algorithm Name: ")
-            train_eps = int(input("Enter the number of training episodes: "))
-            test_eps = int(input("Enter the number of testing episodes: "))
+            train_eps = int(float(input("Enter the number of training episodes: ")))
+            test_eps = int(float(input("Enter the number of testing episodes: ")))
             gamma = float(input(r"Enter the discount factor $\gamma$: "))
             lr_fqi = float(input("Enter the learning rate of FQI agent: "))
             lr_fqe_obj = float(input("Enter the learning rate of FQE for objective cost: "))
@@ -378,10 +378,10 @@ class RLConfigurator:
         else:
             algo_name = input("Enter the Algorithm Name: ")
 
-            train_eps = int(input("Enter the number of training episodes: "))
-            train_eps_steps = int(input("Enter the number of steps in each training episode: "))
-            test_eps = int(input("Enter the number of testing episodes: "))
-            test_eps_steps = int(input("Enter the number of steps in each testing episode: "))
+            train_eps = int(float(input("Enter the number of training episodes: ")))
+            train_eps_steps = int(float(input("Enter the number of steps in each training episode: ")))
+            test_eps = int(float(input("Enter the number of testing episodes: ")))
+            test_eps_steps = int(float(input("Enter the number of steps in each testing episode: ")))
 
             optim_fqi = input("Enter the optimizer for FQI agent (e.g. torch.optim.Adam): ")
             optim_fqe = input("Enter the optimizer for FQE agents (e.g. torch.optim.Adam): ")
@@ -392,15 +392,15 @@ class RLConfigurator:
             loss_fqi = input("Enter the loss function for FQI agent (e.g. nn.MSELoss()): ")
             loss_fqe = input("Enter the loss function for FQE agents (e.g. nn.MSELoss()): ")
 
-            memory_capacity = int(input("Enter the memory capacity: "))
-            target_update = int(input("Enter the target update frequency: "))
+            memory_capacity = int(float(input("Enter the memory capacity: ")))
+            target_update = int(float(input("Enter the target update frequency: ")))
             tau = float(input("Enter the soft update parameter (tau): "))
             gamma = float(input(r"Enter the discount factor $\gamma$: "))
 
             lr_fqi = float(input("Enter the learning rate of FQI agent: "))
             lr_fqe_obj = float(input("Enter the learning rate of FQE for objective cost: "))
 
-            constraint_num = int(input("Enter the number of constraints: "))
+            constraint_num = int(float(input("Enter the number of constraints: ")))
             lr_fqe_con_list = []
             lr_lambda_list = []
             threshold_list = []

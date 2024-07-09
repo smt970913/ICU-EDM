@@ -32,7 +32,7 @@ class RLTraining:
         torch.manual_seed(seed)
         return agent_fqe
 
-    def train(self, agent_fqi, agent_fqe_obj, agent_fqe_con_list, safe_constraint = None):
+    def train(self, agent_fqi, agent_fqe_obj, agent_fqe_con_list, constraint = None):
         print('Start to train!')
         print(f'Algorithm:{self.cfg.algo}, Device:{self.cfg.device}')
 
@@ -84,7 +84,7 @@ class RLTraining:
                 for m in range(len(agent_fqe_con_list)):
                     fqe_est_con[m].append(agent_fqe_con_list[m].avg_Q_value_est(state_batch))
                 ################# Update the dual variable: lambda ####################
-                if safe_constraint == None:
+                if constraint == None:
                     lambda_update_list = [0 for i in range(len(agent_fqe_con_list))]
                     lambda_t_list = [0 for i in range(len(agent_fqe_con_list))]
                 else:
