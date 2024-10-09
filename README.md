@@ -4,7 +4,7 @@ The repository contains code for an Offline Constrained Reinforcement Learning b
 tool utilized in the research effort of us. Code created by Maotong Sun (maotong.sun@tum.de) and Jingui Xie (jingui.xie@tum.de) 
 and please **CITE** the following when you are utilizing our results:
 
-Maotong Sun, Jingui Xie. An Offline Constrained Reinforcement Learning based Approach for Safe Extubation Decision-Making in the Intensive Care Units, 2024.
+Maotong Sun, Jingui Xie. Personalized Extubation Decision-Making with Resource Constraints, 2024.
 
 This repository contains multiple files, most of them being achieved in the `models` folder:
 1. `models/safe_fqi_model.py`: The main file for the Offline Constrained Reinforcement Learning based Extubation Decision-Making support tool.
