@@ -1,4 +1,4 @@
-# Offline Constrained Reinforcement Learning for Extubation Decision-Making
+# Extubation Decision-Making with Constraints 
 
 The repository contains code for an Offline Constrained Reinforcement Learning based Extubation Decison-Making support
 tool utilized in the research effort of us. Code created by Maotong Sun (maotong.sun@tum.de) and Jingui Xie (jingui.xie@tum.de) 
