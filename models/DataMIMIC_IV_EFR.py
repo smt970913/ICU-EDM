@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 script_dir = os.path.dirname(__file__)
 sys.path.append(script_dir)
 
-import offline_fqi_model
+import OCRL_model_fqi
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -115,8 +115,8 @@ class DataLoader:
         self.terminal_state = np.zeros(self.rl_state_var_sc.shape[1])
 
     def data_buffer_train(self):
-        self.train_memory_cont = offline_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
-        self.train_memory_ext = offline_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
+        self.train_memory_cont = OCRL_model_fqi.ReplayBuffer(self.cfg.memory_capacity)
+        self.train_memory_ext = OCRL_model_fqi.ReplayBuffer(self.cfg.memory_capacity)
 
         for i in range(len(self.train_state_table_cont)):
             state = self.rl_state_var_sc_train_cont.values[i]
@@ -142,8 +142,8 @@ class DataLoader:
             self.train_memory_ext.push(state, action, obj_cost, con_cost, next_state, done)
 
     def data_buffer_test(self):
-        self.test_memory_cont = offline_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
-        self.test_memory_ext = offline_fqi_model.ReplayBuffer(self.cfg.memory_capacity)
+        self.test_memory_cont = OCRL_model_fqi.ReplayBuffer(self.cfg.memory_capacity)
+        self.test_memory_ext = OCRL_model_fqi.ReplayBuffer(self.cfg.memory_capacity)
 
         for i in range(len(self.test_state_table_cont)):
             state = self.rl_state_var_sc_test_cont.values[i]

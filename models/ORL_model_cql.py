@@ -15,7 +15,7 @@ parent_path = str(Path().absolute().parent)
 sys.path.append(parent_path) # add current terminal path to sys.path
 curr_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")  # obtain current time
 
-# Define the FQE class
+# Define the approximator for FQE class
 class FCN_fqe(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_layers = None):
         super(FCN_fqe, self).__init__()
@@ -56,10 +56,10 @@ class FCN_fqe(nn.Module):
 
         return x
 
-# Define the FQI class
-class FCN_fqi(nn.Module):
+# Define the approximator for CQL class
+class FCN_cql(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_layers = None):
-        super(FCN_fqi, self).__init__()
+        super(FCN_cql, self).__init__()
 
         if hidden_layers is None:
             self.fc1 = nn.Linear(state_dim, action_dim)
@@ -200,14 +200,14 @@ class FQE:
         torch.save(self.policy_net.state_dict(), path + 'FQE_policy_network.pth')
         torch.save(self.target_net.state_dict(), path + 'FQE_target_network.pth')
 
-class FQI:
+class CQL:
     def __init__(self, cfg, state_dim, action_dim, hidden_layers):
         self.device = cfg.device
 
         self.gamma = cfg.gamma # discount factor
 
-        self.policy_net = FCN_fqi(state_dim, action_dim, hidden_layers).to(self.device)
-        self.target_net = FCN_fqi(state_dim, action_dim, hidden_layers).to(self.device)
+        self.policy_net = FCN_cql(state_dim, action_dim, hidden_layers).to(self.device)
+        self.target_net = FCN_cql(state_dim, action_dim, hidden_layers).to(self.device)
 
         for target_param, param in zip(self.target_net.parameters(), self.policy_net.parameters()):
             target_param.data.copy_(param.data)
@@ -258,7 +258,7 @@ class FQI:
 
 ### Comparatively convenient configuration settings for studying extubation decision-making problem
 class RLConfig_default:
-    def __init__(self, algo_name, train_eps, test_eps, gamma, lr_fqi, lr_fqe_obj, constraint_num, lr_fqe_con_list, lr_lambda_list, threshold_list):
+    def __init__(self, algo_name, train_eps, test_eps, gamma, lr_cql, lr_fqe_obj, constraint_num, lr_fqe_con_list):
         self.algo = algo_name  # name of algorithm
 
         self.train_eps = train_eps  #the number of trainng episodes
@@ -423,5 +423,3 @@ class RLConfigurator:
                                           constraint_num, lr_fqe_con_list, lr_lambda_list, threshold_list)
 
         return self.config
-
-

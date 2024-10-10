@@ -7,7 +7,7 @@ and please **CITE** the following when you are utilizing our results:
 Maotong Sun, Jingui Xie. Personalized Extubation Decision-Making with Resource Constraints, 2024.
 
 This repository contains multiple files, most of them being achieved in the `models` folder:
-1. `models/safe_fqi_model.py`: The main file for the Offline Constrained Reinforcement Learning based Extubation Decision-Making support tool.
+1. `models/OCRL_model_fqi.py`: The main file for the Offline Constrained Reinforcement Learning based Extubation Decision-Making support tool.
 2. `models/train_set.py`: The file for the training set generation.
 3. `models/test_set.py`: The file for the evaluation of the model.
 4. `models/DataMIMIC_IV.py`: The file for modifying the data suitable for the RL training and testing. 
@@ -15,9 +15,8 @@ The data is from the MIMIC-IV dataset, and has already been preprocessed.
 The original dataset is not provided in this repository, 
 but can be obtained from the MIMIC-IV dataset website. 
 The data is preprocessed and saved in the `data` folder as `state_id_table.csv` and `rl_state_table.csv`.
-5. `models/figure_plot.py`: The file for plotting the numerical results.
 
-In the following section, we provide the guideline to show the functions of `models/safe_fqi_model.py`, 
+In the following section, we provide the guideline to show the functions of `models/OCRL_model_fqi.py`, 
 `models/train_set.py`, and `models/test_set.py`.
 
 ## Guideline
@@ -42,8 +41,8 @@ Users can specify the imputation methods they would like to use and set necessar
 Before deploying RL algorithms to a medical decision-making problem, 
 users need to construct a `DataLoader` following these steps. 
 Here, we demonstrate using the `MIMIC-IV` dataset from our research, 
-with Remaining Length-of-Stay (RLOS) from invasive mechanical ventilation (MV) initiation as the objective cost 
-and Extubation Failure Rate (EFR) as the safety constraint.
+with Extubation Failure Rate (EFR) as the objective cost 
+and Length-of-Stay (LOS) in ICUs from invasive mechanical ventilation (MV) initiation as the resource constraint.
 ```
 class DataLoader:
     def __init__(self, cfg, state_id_path, rl_state_path, test_size = 0.20, random_state = 1000, scaler = StandardScaler()):
@@ -75,7 +74,7 @@ split the data into training and testing sets,
 and store them into the respective training and testing `buffer`.
 1) Load the data: Load the data from the `state_id_table.csv` and `rl_state_table.csv` files. The first table contains some 
 administration information (e.g., admission_ID, LOS, etc.), and the second table contains the clinical variable to construct the 
-feature vector to represent patients' states. Users can upload their own data in the same format or from other sources (e.g., 
+feature vector to represent patients' states (e.g., age, weight, respiratory rate, etc.). Users can upload their own data in the same format or from other sources (e.g., 
 MySQL, Google Cloud, etc.).
 2) Set objective costs and constraints: 
 ```
@@ -97,37 +96,112 @@ def drop_unwanted_columns(self, df):
                        'Tidal Volume (observed)', 'Tidal Volume (spontaneous)']
     return df.drop(columns=columns_to_drop)
 ```
-4) Scale the data: 
+4) Data process for model training, we only use scaling here, and other data processing methods can be added here: 
 ```
 def scale_data(self, df):
     return pd.DataFrame(self.scaler.fit_transform(df), columns = df.columns)
 ```
-5) Split the data: 
+5) Split the data into training and testing sets: 
 ```
 def split_data(self):
     self.train_ext_id, self.test_ext_id = train_test_split(pd.unique(self.state_df_id_exp['ext_id']), test_size = self.test_size, random_state = self.random_state)
     self.prepare_dataframes()
     self.data_buffer_train()
     self.data_buffer_test()
+ 
+def prepare_dataframes(self):
+    ...
+```
+6) Store the training and testing sets into the respective training and testing `buffer`: 
+```
+def data_buffer_train(self):
+    ...
+def data_buffer_test(self):
+    ...
+```
+7) Build the dataloaders for the training and testing sets suitable for the RL training and testing using PyTorch: 
+```
+def data_torch_loader_train(self):
+    ...
+def data_torch_loader_test(self):
+    ...
 ```
 
-### Step 2. Set the RL Agent
-Users only need to specify several hyperparameters to construct the RL agent.
+
+### Step 2. Set the Hyperparameters for the RL Agent
+Users only need to specify several hyperparameters to construct the RL agent, 
+with or without constraints. 
+The RL agent we use is the Fitted-Q-Iteration (FQI) algorithm modified by us, which is introduced 
+in the paper "Personalized Extubation Decision-Making with Resource Constraints".
 ```
 # Start the RL agent construction
-configurator = safe_fqi_model.RLConfigurator()
+configurator = OCRL_model_fqi.RLConfigurator()
 # Specify the hyperparameters
 config = configurator.input_rl_config()
 ```
 If researchers lean towards studying Constrained RL models, 
-customization of more hyperparameters is possible by modifying `safe_fqi_model.RLConfigurator()`, 
+customization of more hyperparameters is possible by modifying `OCRL_model_fqi.RLConfigurator()`, 
 including the loss function (we default to using `MSE`) 
-and the corresponding optimization algorithm (we default to using `Adam`). 
-For medical researchers, 
+and the corresponding optimization algorithm (we default to using `SGD`). 
+Otherwise, 
 the program accommodates more commonly used reinforcement learning hyperparameter settings, 
-providing an interface that allows medical researchers to 
-input the number of safety constraints they require and their corresponding thresholds.
+providing an interface that allows researchers to 
+input the number of constraints they require and their corresponding thresholds.
 
 ### Step 3. Train the RL Agent
+1) Use the 'DataLoader' built in Step 1 to load the training and testing sets.
+```
+data = DataMIMIC_IV_EFR.DataLoader(config, 
+                                   state_id_path = "../data/state_id_table.csv", 
+                                   rl_state_path = "../data/rl_state_table.csv", 
+                                   test_size = 0.20, random_state = 68, scaler = StandardScaler())
+```
+You can use 'data.state_df_id' or 'data.rl_state_var' to check the data you loaded.
+```
+data.state_df_id
+
+data.rl_state_var
+```
+2) Train the FQI agent using the training sets.
+```
+rl_training = train_set.RLTraining(cfg, 
+                                   state_dim = 30, action_dim = 2, 
+                                   hidden_layers = None, 
+                                   data_loader = data.data_torch_loader_train)
+
+agent_fqi_c0 = rl_training.fqi_agent_config(seed = 1)
+agent_fqe_obj_c0 = rl_training.fqe_agent_config(agent_fqi_c0, eval_target = 'obj', seed = 2)
+agent_fqe_con_c0 = rl_training.fqe_agent_config(agent_fqi_c0, eval_target = 0, seed = 3)
+
+rl_training.train(agent_fqi_c0, agent_fqe_obj_c0, [agent_fqe_con_c0], constraint = True)                                
+```
+Users should create the FQI agent and FQE agents for the training. In this case, 
+two FQE agents should be created, 
+one for the objective cost $c$ which refers to the EFR, 
+and one for the constraint cost $g$ which is the LOS in ICU after the initiation of MV. 
+The FQI agent is used to learn the policy, 
+and the FQE agents are used to evaluate the learned policy 
+and update the dual variables (if constraints exist).
 
 ### Step 4. Evaluate (test) the RL Agent
+Similar to the training process, users can evaluate the trained RL agent using the testing sets. 
+The evaluation method is Fitted-Q-Evaluation (FQE). 
+```
+rl_testing = test_set.RLTesting(cfg, 
+                                state_dim = 30, action_dim = 2, 
+                                hidden_layers = None, test_agent = agent_fqi_c0, 
+                                data_loader = data.data_torch_loader_test)
+                                
+agent_fqe_test_obj_0 = rl_testing.fqe_agent_config(eval_target = 'obj', seed = 11)
+agent_fqe_test_con_0 = rl_testing.fqe_agent_config(eval_target = 0, seed = 12)
+
+rl_testing.test(agent_fqe_test_obj_0, [agent_fqe_test_con_0])                                
+```
+In this case, two FQE agents are set up for testing: 
+one to evaluate the objective cost and the other to assess the constraint cost.
+
+### Step 5. Comparison and Visualization
+After training and testing the proposed method, 
+users can compare the results with other offline RL approaches, 
+such as the standard FQI algorithm 
+and the Conservative Q-Learning (CQL) algorithm.

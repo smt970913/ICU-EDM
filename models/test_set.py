@@ -8,7 +8,7 @@ from tqdm import tqdm
 script_dir = os.path.dirname(__file__)
 sys.path.append(script_dir)
 
-import offline_fqi_model
+import OCRL_model_fqi
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -23,7 +23,7 @@ class RLTesting:
         self.data_loader = data_loader
 
     def fqe_agent_config(self, eval_target, seed = 100):
-        agent_fqe_test = offline_fqi_model.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, self.test_agent, eval_target)
+        agent_fqe_test = OCRL_model_fqi.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, self.test_agent, eval_target)
         torch.manual_seed(seed)
         return agent_fqe_test
 
