@@ -8,7 +8,7 @@ from tqdm import tqdm
 script_dir = os.path.dirname(__file__)
 sys.path.append(script_dir)
 
-import offline_fqi_model
+import OCRL_model_fqi
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -23,12 +23,12 @@ class RLTraining:
         self.data_loader = data_loader
 
     def fqi_agent_config(self, seed = 1):
-        agent_fqi = offline_fqi_model.FQI(self.cfg, self.state_dim, self.action_dim, self.hidden_layers)
+        agent_fqi = OCRL_model_fqi.FQI(self.cfg, self.state_dim, self.action_dim, self.hidden_layers)
         torch.manual_seed(seed)
         return agent_fqi
 
     def fqe_agent_config(self, eval_agent, eval_target, seed = 2):
-        agent_fqe = offline_fqi_model.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, eval_agent, eval_target)
+        agent_fqe = OCRL_model_fqi.FQE(self.cfg, self.state_dim, self.action_dim, self.hidden_layers, eval_agent, eval_target)
         torch.manual_seed(seed)
         return agent_fqe
 
