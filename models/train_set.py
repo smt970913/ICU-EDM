@@ -141,7 +141,7 @@ class RLTraining_cql:
 
         self.data_loader = data_loader
 
-    def fqi_agent_config(self, seed = 1):
+    def cql_agent_config(self, seed = 1):
         agent_cql = ORL_model_cql.CQL(self.cfg, self.state_dim, self.action_dim, self.hidden_layers)
         torch.manual_seed(seed)
         return agent_cql

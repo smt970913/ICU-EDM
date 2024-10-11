@@ -19,7 +19,7 @@ but can be obtained from the MIMIC-IV dataset website.
 The data is preprocessed and saved in the `data` folder as `state_id_table.csv` and `rl_state_table.csv`.
 
 In the following section, we provide the guideline to show the functions of `models/OCRL_model_fqi.py`, 
-`models/train_set.py`, and `models/test_set.py`.
+`models/train_set.py`, `models/test_set.py`, and `models/ORL_model_cql.py`.
 
 ## Guideline
 ### Step 0. Data Preprocessing
@@ -213,7 +213,7 @@ data = DataMIMIC_IV_EFR.DataLoader(config,
                                    rl_state_path = "../data/rl_state_table.csv", 
                                    test_size = 0.20, random_state = 68, scaler = StandardScaler())
                                    
-cql_training = train_set.RLTraining_cql(cfg, state_dim = 30, action_dim = 2, hidden_layers = None, data_loader = data.data_torch_loader_train)
+cql_training = train_set.RLTraining_cql(config, state_dim = 30, action_dim = 2, hidden_layers = None, data_loader = data.data_torch_loader_train)
 
 agent_cql_0 = cql_training.cql_agent_config(seed = 1)
 agent_fqe_obj_0 = cql_training.fqe_agent_config(agent_cql_0, eval_target = 'obj', seed = 2)
@@ -221,3 +221,6 @@ agent_fqe_con_0 = cql_training.fqe_agent_config(agent_cql_0, eval_target = 0, se
 
 agent_cql_0.train(agent_fqi_c0, agent_fqe_obj_c0, [agent_fqe_con_c0])                                
 ```
+
+In the notebook `notebooks/Example_MIMIC_IV_EFR.ipynb`, 
+we demonstrate the functionality by executing the above steps.
