@@ -263,7 +263,7 @@ class CQL:
 
 ### Comparatively convenient configuration settings for studying extubation decision-making problem
 class RLConfig_default:
-    def __init__(self, algo_name, train_eps, test_eps, gamma, lr_cql, lr_fqe, reg_param):
+    def __init__(self, algo_name, train_eps, test_eps, gamma, lr_cql, lr_fqe_obj, constraint_num, lr_fqe_con_list, reg_param):
 
         self.algo = algo_name  # name of algorithm
         self.train_eps = train_eps  #the number of trainng episodes
@@ -273,7 +273,7 @@ class RLConfig_default:
 
         # learning rates
         self.lr_cql = lr_cql
-        self.lr_fqe = lr_fqe
+        self.lr_fqe_obj = lr_fqe_obj
 
         # CQL regularization parameter
         self.reg_param = reg_param
@@ -295,6 +295,13 @@ class RLConfig_default:
         self.loss_cql = nn.MSELoss()
         self.loss_fqe = nn.MSELoss()
 
+        # constraint threshold
+        self.constraint_num = constraint_num
+        self.lr_fqe_con = [0 for i in range(constraint_num)]
+
+        for i in range(constraint_num):
+            self.lr_fqe_con[i] = lr_fqe_con_list[i]
+
         self.memory_capacity = int(1e6)  # capacity of Replay Memory
 
         self.target_update = 100 # update frequency of target net
@@ -311,7 +318,8 @@ class RLConfig_custom:
                  loss_cql, loss_fqe,
                  memory_capacity, target_update, tau,
                  gamma,
-                 lr_cql, lr_fqe, reg_param):
+                 lr_cql, lr_fqe_obj, constraint_num, lr_fqe_con_list,
+                 reg_param):
 
         self.algo = algo_name  # name of algorithm
 
@@ -336,7 +344,14 @@ class RLConfig_custom:
 
         # learning rates
         self.lr_cql = lr_cql
-        self.lr_fqe = lr_fqe
+        self.lr_fqe_obj = lr_fqe_obj
+
+        # constraint threshold
+        self.constraint_num = constraint_num
+        self.lr_fqe_con = [0 for i in range(constraint_num)]
+
+        for i in range(constraint_num):
+            self.lr_fqe_con[i] = lr_fqe_con_list[i]
 
         # safety constraint threshold
         self.reg_param = reg_param
@@ -353,10 +368,17 @@ class RLConfigurator:
             test_eps = int(float(input("Enter the number of testing episodes: ")))
             gamma = float(input(r"Enter the discount factor $\gamma$: "))
             lr_cql = float(input("Enter the learning rate of CQL agent: "))
-            lr_fqe = float(input("Enter the learning rate of FQE agent: "))
+            lr_fqe_obj = float(input("Enter the learning rate of FQE agent for evaluating the objective cost: "))
             reg_param = float(input("Enter the regularization parameter for CQL: "))
 
-            self.config = RLConfig_default(algo_name, train_eps, test_eps, gamma, lr_cql, lr_fqe, reg_param)
+            constraint_num = int(input("Enter the number of constraints in the decision-making problem: "))
+            lr_fqe_con_list = []
+
+            for i in range(constraint_num):
+                lr_fqe_con = float(input(f"Enter the learning rate of FQE Agent for evaluating the constraint {i + 1}: "))
+                lr_fqe_con_list.append(lr_fqe_con)
+
+            self.config = RLConfig_default(algo_name, train_eps, test_eps, gamma, lr_cql, lr_fqe_obj, constraint_num, lr_fqe_con_list, reg_param)
 
         else:
             algo_name = input("Enter the Algorithm Name: ")
@@ -388,16 +410,18 @@ class RLConfigurator:
             gamma = float(input(r"Enter the discount factor $\gamma$: "))
 
             lr_cql = float(input("Enter the learning rate of CQL agent: "))
-            lr_fqe = float(input("Enter the learning rate of FQE agent: "))
+            lr_fqe_obj = float(input("Enter the learning rate of FQE agent for evaluating the objective cost: "))
+
+            constraint_num = int(float(input("Enter the number of constraints: ")))
+            lr_fqe_con_list = []
+
+            for i in range(constraint_num):
+                lr_fqe_con = float(input(f"Enter the learning rate of FQE Agent for evaluating the constraint {i+1}: "))
+                lr_fqe_con_list.append(lr_fqe_con)
 
             reg_param = float(input("Enter the regularization parameter $\alpha$ for CQL: "))
 
-            self.config = RLConfig_custom(algo_name, train_eps, train_eps_steps,
-                                          test_eps, test_eps_steps,
-                                          weight_decay_cql, weight_decay_fqe,
-                                          optim_cql, optim_fqe,
-                                          loss_cql, loss_fqe,
-                                          memory_capacity, target_update, tau, gamma,
-                                          lr_cql, lr_fqe, reg_param)
+            self.config = RLConfig_custom(algo_name, train_eps, train_eps_steps, test_eps, test_eps_steps, weight_decay_cql, weight_decay_fqe, optim_cql, optim_fqe,
+                                          loss_cql, loss_fqe, memory_capacity, target_update, tau, gamma, lr_cql, lr_fqe_obj, constraint_num, lr_fqe_con_list, reg_param)
 
         return self.config

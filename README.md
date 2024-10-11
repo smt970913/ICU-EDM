@@ -7,7 +7,9 @@ and please **CITE** the following when you are utilizing our results:
 Maotong Sun, Jingui Xie. Personalized Extubation Decision-Making with Resource Constraints, 2024.
 
 This repository contains multiple files, most of them being achieved in the `models` folder:
-1. `models/OCRL_model_fqi.py`: The main file for the Offline Constrained Reinforcement Learning based Extubation Decision-Making support tool.
+1. `models/OCRL_model_fqi.py`: The main file for the Offline Constrained Reinforcement Learning based Extubation Decision-Making 
+support tool.
+2. `models/ORL_model_cql.py`: The file for the Conservative Q-Learning (CQL) algorithm.
 2. `models/train_set.py`: The file for the training set generation.
 3. `models/test_set.py`: The file for the evaluation of the model.
 4. `models/DataMIMIC_IV.py`: The file for modifying the data suitable for the RL training and testing. 
@@ -184,24 +186,38 @@ and the FQE agents are used to evaluate the learned policy
 and update the dual variables (if constraints exist).
 
 ### Step 4. Evaluate (test) the RL Agent
-Similar to the training process, users can evaluate the trained RL agent using the testing sets. 
-The evaluation method is Fitted-Q-Evaluation (FQE). 
-```
-rl_testing = test_set.RLTesting(cfg, 
-                                state_dim = 30, action_dim = 2, 
-                                hidden_layers = None, test_agent = agent_fqi_c0, 
-                                data_loader = data.data_torch_loader_test)
-                                
-agent_fqe_test_obj_0 = rl_testing.fqe_agent_config(eval_target = 'obj', seed = 11)
-agent_fqe_test_con_0 = rl_testing.fqe_agent_config(eval_target = 0, seed = 12)
-
-rl_testing.test(agent_fqe_test_obj_0, [agent_fqe_test_con_0])                                
-```
-In this case, two FQE agents are set up for testing: 
-one to evaluate the objective cost and the other to assess the constraint cost.
+Users can evaluate the trained RL agent using the testing sets and the FQE agents.
 
 ### Step 5. Comparison and Visualization
 After training and testing the proposed method, 
 users can compare the results with other offline RL approaches, 
-such as the standard FQI algorithm 
+such as the standard FQI algorithm (without constraints)
 and the Conservative Q-Learning (CQL) algorithm.
+
+1) For the standard FQI algorithm without constraints, 
+users can simply set the `constraint_num` to 0 in the `RLConfigurator` class 
+during Step 2.
+
+2) For the CQL algorithm, 
+users can import the `ORL_model_cql.py` file from the `models` folder, 
+and then follow similar steps as the FQI algorithm with constraints.
+```
+from models import ORL_model_cql
+
+configurator = ORL_model_cql.RLConfigurator()
+config = configurator.input_rl_config()
+
+# Load the data
+data = DataMIMIC_IV_EFR.DataLoader(config, 
+                                   state_id_path = "../data/state_id_table.csv", 
+                                   rl_state_path = "../data/rl_state_table.csv", 
+                                   test_size = 0.20, random_state = 68, scaler = StandardScaler())
+                                   
+cql_training = train_set.RLTraining_cql(cfg, state_dim = 30, action_dim = 2, hidden_layers = None, data_loader = data.data_torch_loader_train)
+
+agent_cql_0 = cql_training.cql_agent_config(seed = 1)
+agent_fqe_obj_0 = cql_training.fqe_agent_config(agent_cql_0, eval_target = 'obj', seed = 2)
+agent_fqe_con_0 = cql_training.fqe_agent_config(agent_cql_0, eval_target = 0, seed = 3)
+
+agent_cql_0.train(agent_fqi_c0, agent_fqe_obj_c0, [agent_fqe_con_c0])                                
+```
