@@ -284,20 +284,25 @@ class RLConfig_default:
         ### some default settings for extubation decision-making study
         self.train_eps_steps = 3000  # the number of steps in each training episode
         self.test_eps_steps = 3000  # the number of steps in each testing episode
+
         self.batch_size_cont = 400
         self.batch_size_ext = 400
+
         self.weight_decay_fqi = 1e-5
         self.weight_decay_fqe = 1e-5
 
         self.optimizer_fqi = torch.optim.Adam
         self.optimizer_fqe = torch.optim.Adam
+
         self.loss_fqi = nn.MSELoss()
         self.loss_fqe = nn.MSELoss()
+
         self.memory_capacity = int(1e6)  # capacity of Replay Memory
+
         self.target_update = 100 # update frequency of target net
         self.tau = 0.01
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # check gpu
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # check GPU
 
 ### Customized configuration settings for studying any medical decision-making problems
 class RLConfig_custom:
@@ -336,7 +341,7 @@ class RLConfig_custom:
         self.lr_fqi = lr_fqi
         self.lr_fqe_obj = lr_fqe_obj
 
-        # safety constraint threshold
+        # constraint threshold
         self.constraint_num = constraint_num
         self.lr_fqe_con = [0 for i in range(constraint_num)]
         self.lr_lam = [0 for i in range(constraint_num)]
@@ -351,7 +356,7 @@ class RLConfig_custom:
 
 class RLConfigurator:
     def input_rl_config(self):
-        default = input("Do you want to use the default settings? (y/n): ")
+        default = input("Do you want to use the default settings of OCRL for extubation decision-making? (y/n): ")
 
         if default == 'y':
             algo_name = input("Enter the Algorithm Name: ")
@@ -386,8 +391,15 @@ class RLConfigurator:
             optim_fqi = input("Enter the optimizer for FQI agent (e.g. torch.optim.Adam): ")
             optim_fqe = input("Enter the optimizer for FQE agents (e.g. torch.optim.Adam): ")
 
-            weight_decay_fqi = float(input("Enter the weight decay for FQI agent: "))
-            weight_decay_fqe = float(input("Enter the weight decay for all FQE agents: "))
+            if optim_fqi == 'torch.optim.Adam':
+                weight_decay_fqi = float(input("Enter the weight decay for FQI agent: "))
+            else:
+                weight_decay_fqi = None
+
+            if optim_fqe == 'torch.optim.Adam':
+                weight_decay_fqe = float(input("Enter the weight decay for all FQE agents: "))
+            else:
+                weight_decay_fqe = None
 
             loss_fqi = input("Enter the loss function for FQI agent (e.g. nn.MSELoss()): ")
             loss_fqe = input("Enter the loss function for FQE agents (e.g. nn.MSELoss()): ")
@@ -404,6 +416,7 @@ class RLConfigurator:
             lr_fqe_con_list = []
             lr_lambda_list = []
             threshold_list = []
+
             for i in range(constraint_num):
                 lr_fqe_con = float(input(f"Enter the learning rate for FQE Agent of the constraint {i+1}: "))
                 lr_lambda = float(input(f"Enter the learning rate for dual variable $\lambda$ {i+1}: "))
