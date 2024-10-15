@@ -24,20 +24,14 @@ In the following section, we provide the guideline to show the functions of `mod
 
 ## Guideline
 ### Step 0. Data Preprocessing
-```
-# Load the data
-data = data_selection.load_data()
-# Data preprocessing 
-data = data_selection.Medical_data_preprocess(data)  
-# Data imputation (e.g., using the mean imputation method)
-data = data_imputation.imputation(data, method='mean')
-```
-Use the `data_selection.py` file to preprocess the data and complete the data selection process for you. We provide some 
-common selection criterias for critical care study, and those we used in our study. Users can modify the file to fit their 
-own needs.
+We provide our data selection process and data imputation process in the `data` folder.
+The `data/data_selection.py` file is used to preprocess the original MIMIC-IV data 
+and complete the data selection process. We provide some 
+common selection criterias for extubation decision-making study. 
+Users can modify the file to fit their own dataset.
 
-Similarly, use the `data_imputation.py` file to impute the missing values in the data. Also, 
-we provide some common imputation methods in healthcare data, and those we used in our study. 
+Then, the `data/data_imputation.py` file is used to impute the missing values in the selected data. 
+We provide some common imputation methods and the whole data imputation process in our study. 
 Users can specify the imputation methods they would like to use and set necessary hyperparameters.
 
 ### Step 1. Construct the DataLoader
