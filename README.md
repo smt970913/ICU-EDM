@@ -1,4 +1,4 @@
-# Extubation Decision-Making with Constraints 
+# ICU Extubation Decision-Making 
 
 The repository contains code for an Offline Constrained Reinforcement Learning (RL) based Extubation Decison-Making support
 tool utilized in the research effort of us. Code created by Maotong Sun (maotong.sun@tum.de) and Jingui Xie (jingui.xie@tum.de) 
