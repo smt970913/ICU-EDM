@@ -13,7 +13,7 @@ class RLTesting:
         self.fqe_agent = fqe_agent
         self.data_loader = data_loader
 
-    def test(self):
+    def test_eval(self):
 
         state_batch, action_batch, obj_cost_batch, con_cost_batch_dict, next_state_batch, done_batch = self.data_loader()
 

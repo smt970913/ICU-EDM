@@ -182,6 +182,13 @@ and update the dual variables (if constraints exist).
 
 ### Step 4. Evaluate (test) the RL Agent
 Users can evaluate the trained RL agent using the testing sets and the FQE agents.
+```
+rl_testing = test_set.RLTesting(cfg,  agent_fqe_obj_c0, data_loader = data.data_torch_loader_test)
+test_eval_obj_cost = rl_testing.test_eval()
+
+rl_testing = test_set.RLTesting(cfg,  agent_fqe_con_c0, data_loader = data.data_torch_loader_test)
+test_eval_con_cost = rl_testing.test_eval()
+```
 
 ### Step 5. Comparison and Visualization
 After training and testing the proposed method, 
