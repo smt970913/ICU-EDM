@@ -190,7 +190,7 @@ rl_testing = test_set.RLTesting(cfg,  agent_fqe_con_c0, data_loader = data.data_
 test_eval_con_cost = rl_testing.test_eval()
 ```
 
-### Step 5. Comparison and Visualization
+### Step 5. Comparison with CQL
 After training and testing the proposed method, 
 users can compare the results with other offline RL approaches, 
 such as the standard FQI algorithm (without constraints)
