@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 import tkinter as tk
 from tkinter import messagebox
+from PIL import Image, ImageTk
 
 from interactive_support import *
 
@@ -30,20 +31,37 @@ def load_model(model_index):
 def main():
     # Create GUI window
     root = tk.Tk()
-    root.title("Select Model")
+    root.geometry("600x800")
+    root.grid_columnconfigure(0, weight=1)
+    root.grid_columnconfigure(1, weight=1)
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_rowconfigure(1, weight=1)
+    root.grid_rowconfigure(2, weight=1)  # Set the initial size of the window (width x height)
+
+    root.title("Fitted-Q-Evaluation of Extubation Failure Rate (EFR)")
+    root.title("Fitted-Q-Evaluation of Extubation Failure Rate (EFR)")
+    # root.title("Select Model")
+
+    # Load and display the image at the top of the window
+    img = Image.open('../image/illus_mechanical_vent.jpg')
+    img = img.resize((400, 200))  # Adjust the size as needed
+    img = ImageTk.PhotoImage(img)  # Update with the correct path to your image
+    img_label = tk.Label(root, image=img)
+    img_label.grid(row=0, column=0, columnspan=2, pady=10, sticky='n')
+    img_label.image = img
 
     # Create model selection dropdown
     model_var = tk.StringVar(root)
     model_var.set("Select Model")
     model_dropdown = tk.OptionMenu(root, model_var, *[f"Model {i + 1}" for i in range(len(MODEL_FILES))])
-    model_dropdown.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
+    model_dropdown.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky='n')
 
     def on_model_select():
         try:
             model_index = int(model_var.get().split()[1]) - 1
             model = load_model(model_index)
             scaler = StandardScaler()
-            print("Model loaded, ready for interaction.")
+            print("FQE Model loaded, ready for interaction.")
 
             # Clear window content
             for widget in root.winfo_children():
@@ -70,6 +88,7 @@ def main():
                 label = tk.Label(root, text=label_text)
                 label.grid(row=i, column=0, padx=10, pady=5)
                 entry = tk.Entry(root)
+                entry.bind('<Return>', lambda event, next_entry=entry: next_entry.tk_focusNext().focus())
                 entry.grid(row=i, column=1, padx=10, pady=5)
                 entries.append(entry)
 
@@ -109,7 +128,7 @@ def main():
 
     # Confirm selection button
     select_button = tk.Button(root, text="Confirm Selection", command=on_model_select)
-    select_button.grid(row=1, column=0, columnspan=2, pady=10)
+    select_button.grid(row=2, column=0, columnspan=2, pady=10, sticky='n')
 
     root.mainloop()
 
