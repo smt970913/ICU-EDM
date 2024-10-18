@@ -82,20 +82,20 @@ def main():
                         return
 
                     # Split input into features and gender
-                    features = np.array(input_values[:-1]).reshape(1, -1)
-                    gender = input_values[-1]
+                    gender = input_values[1]
+                    features = np.array([input_values[0]] + input_values[2:]).reshape(1, -1)
 
                     # Standardize the features
-                    scaled_features = scaler.transform(features)
+                    scaled_features = scaler.fit_transform(features)
 
-                    # Add gender information to the standardized features
-                    final_input = np.append(scaled_features, [[gender]], axis=1)
+                    # Add gender information to the standardized features at the correct position
+                    final_input = np.insert(scaled_features, 1, gender, axis=1)
 
                     # Convert input to torch tensor
                     final_input_tensor = torch.tensor(final_input, dtype=torch.float).to(device)
+                    print("Input tensor shape:", final_input_tensor.shape)
 
                     # Use the model to make predictions and return the result
-                    # Assuming the model has a predict() function, adjust according to your model's interface
                     response = model.avg_Q_value_est(final_input_tensor)
                     messagebox.showinfo("Model Response", f"Model Response: {response}")
                 except ValueError:
