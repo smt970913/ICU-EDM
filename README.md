@@ -226,3 +226,12 @@ agent_cql_0.train(agent_fqi_c0, agent_fqe_obj_c0, [agent_fqe_con_c0])
 
 In the notebook `notebooks/Example_MIMIC_IV_EFR.ipynb`, 
 we demonstrate the functionality by executing the above steps.
+
+### Step 6. Software Prototype
+We provide a software prototype in 
+the `models/interactive_tool_obj.py` 
+and `models/web_app_test.py`. 
+The trained FQE agents can be loaded to evaluate the new input data. 
+`models/interactive_tool_obj.py` is built on the `tkinter` package, and 
+`models/web_app_test.py` is built on the `flask` package. 
+Users can directly run these two files to try the software prototype.
