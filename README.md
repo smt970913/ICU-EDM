@@ -1,5 +1,5 @@
 # ICU Extubation Decision-Making
-<img src="image/illust_imv.png" alt="Framework of the extubation decision-making problem" width="400">
+<img src="image/pre_figure_2.png" alt="Framework of the extubation decision-making problem" width="400">
 
 The repository contains code for an Offline Constrained Reinforcement Learning (RL) based Extubation Decison-Making support
 tool utilized in the research effort of us. Code created by Maotong Sun (maotong.sun@tum.de) and Jingui Xie (jingui.xie@tum.de) 
@@ -179,6 +179,8 @@ and one for the constraint cost $g$ which is the LOS in ICU after the initiation
 The FQI agent is used to learn the policy, 
 and the FQE agents are used to evaluate the learned policy 
 and update the dual variables (if constraints exist).
+
+<img src="image/illust_imv.png" alt="Framework of the extubation decision-making problem" width="400">
 
 ### Step 4. Evaluate (test) the RL Agent
 Users can evaluate the trained RL agent using the testing sets and the FQE agents.
