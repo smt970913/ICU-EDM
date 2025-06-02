@@ -1,4 +1,4 @@
-# ICU Decision-Making with Offline Constrained Reinforcement Learning
+# ICU Extubation Decision-Making with Offline Constrained Reinforcement Learning
 <img src="image/pre_figure_2.png" alt="Framework of the extubation decision-making problem" width="400">
 
 The repository contains code for an Offline Constrained Reinforcement Learning (RL) based Extubation Decison-Making support
